@@ -1,46 +1,85 @@
 import tweepy
 import requests
 import pandas as pd
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 def post(text):
-    API_KEY = "X8ra26ytbPBrboFAh8Mywa7Wf"
-    API_SECRET = "VBt05E8olDk5RPeTTWutgSin1UTZEN4sM715UEvZojftEPgGJ1"
-    BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAL01lQEAAAAAEEo8FHRqk7kBCnKjmP3pI1738S0%3DmGJH2BXIievfrYepxv53bDS1xQu8ynq2lzGHTZd0zUFrYLHD66"
-    CLIENT_ID = "1615860945938698241-UX2fHttX7rSPeL5CPpooDEbjifdXxc"  #access token
-    CLIENT_SECRET = "FWfgfOsgxft1svGuRuBoAQPZNa0Ca6IpAT9aqQU7C4cAA" #access token secret
 
-    api_key = "hgrthgy2374RTYFTY"  # CONSUMER_KEY
-    api_secret_key = "hGDR2Gyr6534tjkht"  # CONSUMER_SECRET
-    access_token = "HYTHTYH65TYhtfhfgkt34"  # ACCESS_TOKEN
-    access_token_secret = "ged5654tHFG"  # ACCESS_TOKEN_SECRET
+    BEARER_TOKEN = '<insertdata>'
 
-    auth = tweepy.OAuthHandler(API_KEY, API_SECRET)
-    auth.set_access_token(CLIENT_ID,CLIENT_SECRET)
-    api = tweepy.API(auth)
-
-    tweet= "Are Jake Shakes half off at The Milkshake Factory Today?: " + text
-
-    # Generate text tweet
-    status = "This is my first post to Twitter using the API"
-    api.update_status(status=status)
+    API_KEY = '<insertdata>'
+    API_SECRET_KEY = '<insertdata>'
+    ACCESS_TOKEN = '<insertdata>'
+    ACCESS_TOKEN_SECRET = '<insertdata>'
 
 
-url = 'https://www.nhl.com/player/jake-guentzel-8477404'
-html = requests.get(url).content
-df_list = pd.read_html(html)
-df = df_list[-2]
+    # Authenticate with Twitter
+    auth = tweepy.Client(consumer_key=API_KEY, consumer_secret=API_SECRET_KEY, access_token=ACCESS_TOKEN,
+                    access_token_secret=ACCESS_TOKEN_SECRET)
+    # Compose the tweet
+    tweet_text = "Are Jake Shakes half off at The Milkshake Factory (@MShakeFactory) Today?: " + text
 
-recent_date = df.values.tolist()[0][1]
-recent_goal = df.values.tolist()[0][2]
-second_recent_date = df.values.tolist()[1][1]
-second_recent_goal = df.values.tolist()[1][2]
+    # Post the tweet
+    auth.create_tweet(text=tweet_text)
 
-if recent_goal > 0:
-    tf_goal = True
+import requests
 
-if (datetime.today() - timedelta(days = 1)).strftime("%b %d").upper() == recent_date and tf_goal == True:
-    post("Yes!")
-else:
-    post("No.")
+def get_scores_for_date(date):
+
+    # Construct the API URL
+    api_url = f'https://api-web.nhle.com/v1/score/{date}?expand=schedule.linescore'
+
+    # Make a GET request to the API
+    response = requests.get(api_url)
+
+# Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Parse the JSON response
+        data = response.json()
+    else:
+        print("ERROR")
+
+
+    games = data.get('games', [])
+    he_score = False
+    # Iterate through each game
+    for game in games:
+
+        # Iterate through each goal in the game
+        for goal in game['goals']:
+            scorer_name = goal['name']['default']
+            scorer_team = goal['teamAbbrev']
+            strength = goal['strength']
+            time_in_period = goal['timeInPeriod']
+
+
+            if scorer_name == "J. Guentzel":
+                print(f"Date: {game['gameDate']}")
+                print(f"Venue: {game['venue']['default']}")
+                print(f"\nScorer: {scorer_name}")
+                print(f"Team: {scorer_team}")
+                print(f"Strength: {strength}")
+                print(f"Time in Period: {time_in_period}")
+                he_score = True
+                # If you want to display the player's image (mugshot), you can include the following line
+    return he_score
+
+
+
+def get_yesterday_date():
+    # Get the current date
+    today = datetime.now()
+
+    # Calculate yesterday's date by subtracting one day
+    yesterday = today - timedelta(days=1)
+
+    # Format the date as needed
+    yesterday_date = yesterday.strftime("%Y-%m-%d")
+    print(yesterday_date)
+    return yesterday_date
+
+def main():
+    if get_scores_for_date(get_yesterday_date()):
+        post("Yes!")
+    else:
+        post("No.")
